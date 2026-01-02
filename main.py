@@ -1,4 +1,5 @@
 import http
+import math
 import os
 import time
 
@@ -34,12 +35,21 @@ def get_bus_times(stop_code: str, bus_num:str,ttd: int):
                 delay = delay * 2
             else:
                 raise e
+    buses = []
+    seenMatching = False
     for entry in response.json():
         if entry["lineId"] == bus_num:
-            print(entry["timeToStation"])
-            if int(entry["timeToStation"]) < ttd:
-                return True
-    return False
+            seenMatching = True
+            if int(entry["timeToStation"]) > ttd:
+                buses.append(str(math.ceil(int(entry["timeToStation"])/60)))
+    if seenMatching == False:
+        return "No matching buses found on live timetable"
+
+    if len(buses) < 1:
+        return "You will not make any buses on the live timetable."
+
+    times = " and ".join(buses)
+    return f"You will make the {bus_num} busses that arrive in {times} minutes:"
 
 
 print(get_bus_times("490006412E2","57", 420))
